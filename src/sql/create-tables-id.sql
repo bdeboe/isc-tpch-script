@@ -1,6 +1,7 @@
 -- variant of create-tables.sql that accommodates leveraging the RowID as FK
--- changes from original dss.ddl script, delivered with the dbgen utility:
---    - addition of a ${schema} variable
+-- changes create-tables.sql:
+--    - added IDENTITY keyword to control IDKey name
+--    - added *_DBGEN fields with original key values
 
 
 -- Sccsid:     @(#)dss.ddl	2.1.8.1
