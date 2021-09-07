@@ -20,13 +20,13 @@ UPDATE ${schema}NATION
                         WHERE R_REGIONKEY_DBGEN = N_REGIONKEY)
 ;
 
-UPDATE ${schema}SUPPLIER 
+UPDATE %NOLOCK /*#OPTIONS {"DML_PARALLEL":1} */ ${schema}SUPPLIER 
     SET S_NATIONKEY = (SELECT N_NATIONKEY 
                         FROM ${schema}NATION 
                         WHERE N_NATIONKEY_DBGEN = S_NATIONKEY)
 ;
 
-UPDATE ${schema}PARTSUPP 
+UPDATE %NOLOCK /*#OPTIONS {"DML_PARALLEL":1} */ ${schema}PARTSUPP 
     SET PS_PARTKEY = (SELECT P_PARTKEY 
                         FROM ${schema}PART 
                         WHERE P_PARTKEY_DBGEN = PS_PARTKEY),
@@ -35,19 +35,19 @@ UPDATE ${schema}PARTSUPP
                         WHERE S_SUPPKEY_DBGEN = PS_SUPPKEY)
 ;
 
-UPDATE ${schema}CUSTOMER 
+UPDATE %NOLOCK /*#OPTIONS {"DML_PARALLEL":1} */ ${schema}CUSTOMER 
     SET C_NATIONKEY = (SELECT N_NATIONKEY 
                         FROM ${schema}NATION 
                         WHERE N_NATIONKEY_DBGEN = C_NATIONKEY)
 ;
 
-UPDATE ${schema}ORDERS 
+UPDATE %NOLOCK /*#OPTIONS {"DML_PARALLEL":1} */ ${schema}ORDERS 
     SET O_CUSTKEY = (SELECT C_CUSTKEY 
                         FROM ${schema}CUSTOMER 
                         WHERE C_CUSTKEY_DBGEN = O_CUSTKEY)
 ;
 
-UPDATE ${schema}LINEITEM 
+UPDATE %NOLOCK /*#OPTIONS {"DML_PARALLEL":1} */ ${schema}LINEITEM 
     SET L_PARTKEY = (SELECT P_PARTKEY 
                         FROM ${schema}PART 
                         WHERE P_PARTKEY_DBGEN = L_PARTKEY),
