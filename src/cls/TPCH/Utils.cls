@@ -8,11 +8,15 @@ ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %St
 		set separator = $s($$$isWINDOWS:"\",1:"/")
 		set:$e(path,*)'=separator path = path_separator
 
+		// create a new database if requested
+		if (database'="") {
+			set variables("database") = database
+			do ..RunDDL(path_"src"_separator_"sql"_separator_"create-db.sql", .variables, 1, 1)
+		}
+
 		set t1 = $zh
 
 		set variables("schema") = $s(schema="":"", 1:schema_".")
-		set variables("database") = $s(database="":"tpch", 1:database)
-		do ..RunDDL(path_"src"_separator_"sql"_separator_"create-db.sql", .variables, 1, 0)
 		do ..RunDDL(path_"src"_separator_"sql"_separator_"drop-tables.sql", .variables, 1, 0)
 
 		set t2 = $zh, t($i(t)) = "Dropping existing tables: "_$fn(t2-t1,,2)_"s"

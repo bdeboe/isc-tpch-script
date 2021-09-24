@@ -7,6 +7,8 @@ Presumes you have run the `dbgen` utility provided with TPC-H (available from th
 ```ObjectScript
 do ##class(TPCH.Utils).Load("/path/to/isc-tpch-script/")
 ```
+
+Signature of the `Load()` method:
 ```ObjectScript
 ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status
 ```
