@@ -1,7 +1,7 @@
 Class TPCH.Utils
 {
 
-ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, schema As %String = "", verbose As %Boolean = 1) As %Status
+ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status
 {
 	set sc = $$$OK
 	try {
@@ -11,6 +11,8 @@ ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, schema As %Stri
 		set t1 = $zh
 
 		set variables("schema") = $s(schema="":"", 1:schema_".")
+		set variables("database") = $s(database="":"tpch", 1:database)
+		do ..RunDDL(path_"src"_separator_"sql"_separator_"create-db.sql", .variables, 1, 0)
 		do ..RunDDL(path_"src"_separator_"sql"_separator_"drop-tables.sql", .variables, 1, 0)
 
 		set t2 = $zh, t($i(t)) = "Dropping existing tables: "_$fn(t2-t1,,2)_"s"
