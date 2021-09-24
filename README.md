@@ -8,7 +8,13 @@ Presumes you have run the `dbgen` utility provided with TPC-H (available from th
 do ##class(TPCH.Utils).Load("/path/to/isc-tpch-script/")
 ```
 
-Signature of the `Load()` method:
+or from SQL:
+```SQL
+CALL TPCH.Load('/path/to/isc-tpch-script/')
+```
+
+By default, this will create the TPC-H tables in the current default schema (which is `SQLUser` if you didn't set anything) in the current namespace / database. You can override thes using the `schema` and `database` arguments respectively. Full signature of the `Load()` method:
+
 ```ObjectScript
-ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status
+ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status [ SqlProc, SqlName = Load ]
 ```

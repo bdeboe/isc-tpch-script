@@ -1,7 +1,7 @@
 Class TPCH.Utils
 {
 
-ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status
+ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status [ SqlName = Load, SqlProc ]
 {
 	set sc = $$$OK
 	try {
