@@ -42,7 +42,7 @@ ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %St
 		set sc = ..RunDDL(path_"src"_separator_"sql"_separator_"create-keys"_$s(useIDKey:"-id",1:"")_".sql", .variables)
 		quit:$$$ISERR(sc)
 
-		set sc = ..RunDDL(path_"src"_separator_"sql"_separator_"build-indices.sql", .variables)
+		set sc = ..RunDDL(path_"src"_separator_"sql"_separator_"create-indices.sql", .variables)
 		quit:$$$ISERR(sc)
 		
 		set t6 = $zh, t($i(t)) = "Building indices: "_$fn(t6-t5,,2)_"s"
