@@ -1,7 +1,7 @@
 Class TPCH.Utils
 {
 
-ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status [ SqlName = Load, SqlProc ]
+ClassMethod Load(path As %String = "", useIDKey As %Boolean = 0, database As %String = "", schema As %String = "", verbose As %Boolean = 1) As %Status [ SqlName = Load, SqlProc ]
 {
 	set sc = $$$OK
 	try {
@@ -35,7 +35,6 @@ ClassMethod Load(path As %String = "", useIDKey As %Boolean = 1, database As %St
 		if useIDKey {
 			set sc = ..RunDDL(path_"src"_separator_"sql"_separator_"swap-keys.sql", .variables)
 			quit:$$$ISERR(sc)
-			
 			set t5 = $zh, t($i(t)) = "Transforming foreign keys: "_$fn(t5-t4,,2)_"s"
 		}
 		
@@ -68,13 +67,17 @@ ClassMethod RunDDL(file As %String, ByRef replace As %String, ignoreErrors As %B
     try {
         set sep = $s($$$isWINDOWS:"\",1:"/")
         
-        write:verbose !,"Running DDL statements from file '",$piece(file,sep,*),"'"
+        write:verbose !,"Running SQL statements from file '",$piece(file,sep,*),"'"
 
         set stream = ##class(%Stream.FileCharacter).%New()
         set sc = stream.LinkToFile(file)
         quit:$$$ISERR(sc)
 
-		set sql = ""
+		set statement = ##class(%SQL.Statement).%New()
+		set statement.%SelectMode = 1
+        set sql = 1
+        set sql(1) = ""
+        
 
         while 'stream.AtEnd {
             set line = $zstrip(stream.ReadLine(),">WC")
@@ -98,32 +101,60 @@ ClassMethod RunDDL(file As %String, ByRef replace As %String, ignoreErrors As %B
 				for {
 					set str = $order(replace(str),1,rep)
 					quit:str=""
-					set sql = $replace(sql,"${"_str_"}",rep)
+					set sql(1) = $replace(sql(1),"${"_str_"}",rep)
 				}
 
-				set sql = $zstrip(sql,"<>WC"), ts = $zh
+				set sql(1) = $zstrip(sql(1),"<>WC"), ts = $zh
 
-				write:verbose !!,"  Executing statement:",!,sql
-				set rs = ##class(%SQL.Statement).%ExecDirect(,sql)
-				set sql = ""
-				if rs.%SQLCODE {
+				write:verbose !!,"  Preparing statement:",!,sql(1)
+				set sc = statement.%Prepare(.sql)
+        		if ($System.Status.IsError(sc)) 
+        		{
+            		write $System.Status.GetErrorText(sc),!
+            		write "Prepare failed. Exiting",!
+            		Return 0
+        		}
+
+				write:verbose !!,"  Executing statement:",!,sql(1)
+				set rs = statement.%Execute()
+				write:verbose !,"    CODE 1: ",rs.%SQLCODE
+				if (rs.%SQLCODE'=0) & (rs.%SQLCODE'=100) & (rs.%SQLCODE'=-30) {
 					write:verbose !,"    FAILED: ",rs.%Message
+					write:verbose !,"    CODE: 2 ",rs.%SQLCODE
 					if 'ignoreErrors {
 						set sc = $$$ERROR($$$GeneralError, "Error running statement: "_rs.%Message)
-						quit
+						Return 0
+					}
+				} else {
+					write:verbose&&rs.%ROWCOUNT " - ",rs.%ROWCOUNT," rows affected"
+					write:verbose !
+				}
+				do rs.%Display()
+				write:verbose !,"    CODE 3: ",rs.%SQLCODE
+				if (rs.%SQLCODE'=0) & (rs.%SQLCODE'=100) & (rs.%SQLCODE'=-30) {
+					write:verbose !,"    FAILED: ",rs.%Message
+					write:verbose !,"    CODE: 4 ",rs.%SQLCODE
+					if 'ignoreErrors {
+						set sc = $$$ERROR($$$GeneralError, "Error displaying statement: "_rs.%Message)
+						Return 0
 					}
 				} else {
 					write:verbose !,"    SUCCESS (",$normalize($zh-ts,3),"s)"
 					write:verbose&&rs.%ROWCOUNT " - ",rs.%ROWCOUNT," rows affected"
+					write:verbose !
 				}
+
+				set sql(1) = ""
+
 			} else {
-				set sql = sql_$c(13,10)_line
+				; this is adding CR LF 
+				set sql(1) = sql(1)_$c(13,10)_line
 			}
 
         }
 
-		if $zstrip(sql,"<>WC")'="" {
-			write:verbose !!,"leftover statement not executed: ",!,sql
+		if $zstrip(sql(1),"<>WC")'="" {
+			write:verbose !!,"leftover statement not executed: ",!,sql(1)
 		}
         
     } catch (ex) {
@@ -132,6 +163,39 @@ ClassMethod RunDDL(file As %String, ByRef replace As %String, ignoreErrors As %B
     }
 	write:verbose !
     quit sc
+}
+
+ClassMethod Run(path As %String = "", database As %String = "", verbose As %Boolean = 1) As %Status
+{
+	set sc = $$$OK
+	try {
+		set separator = $s($$$isWINDOWS:"\",1:"/")
+		set:$e(path,*)'=separator path = path_separator
+
+		if (database'="") {
+			set variables("database") = database
+		}
+		do ..RunDDL(path_"src"_separator_"sql"_separator_"use-db.sql", .variables, 1, 1)
+
+		For queryid = "Q01","Q02","Q03","Q04","Q05","Q06","Q07","Q08","Q09","Q10","Q11","Q12","Q13","Q14","Q15","Q16","Q17","Q18","Q19","Q20","Q21","Q22" {
+				set t1 = $zh
+				set sc = ..RunDDL(path_"src"_separator_"sql"_separator_queryid_".sql")
+				quit:$$$ISERR(sc)
+				set t2 = $zh, t($i(t)) = queryid_" : "_$fn(t2-t1,,2)_"s"
+        }
+
+		if verbose {
+			for i = 1:1:t {
+				w !,"  - ",t(i)
+			}
+		}
+
+	} catch (ex) {
+		set sc = ex.AsStatus()
+        write:verbose !,"Unexpected error: ",$system.Status.GetOneErrorText(sc)
+	}
+	write:verbose !
+	quit sc
 }
 
 }
